@@ -1,0 +1,15 @@
+.memeone_input {
+	font-size: 12px;
+	margin: 10px auto;
+}
+
+.memeone_new_meme_div {
+	text-align: center;
+	
+}
+
+.memeone_new_meme {
+	width: inherit;
+	border-radius: 0;
+	border: 0;
+}
