@@ -1,0 +1,28 @@
+#memeone_canvas {
+	position: absolute;
+	max-height: 600px;
+	max-width: 600px;
+	display: none;
+}
+
+#memeone_form_wrapper {
+	display: block;
+}
+
+#memeone_loading_icon, #memeone_error_message_area, #memeone_generator_form {
+	display: none;
+}
+
+#memeone_loading_icon {
+	max-width: 16px;
+}
+
+.memeone_meme {
+border-radius: 0px;
+border-style: none;
+}
+
+@font-face {
+    font-family: 'FreeSerif';
+    src: url('fonts/FreeSerif.ttf');
+}
