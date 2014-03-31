@@ -1,9 +1,13 @@
+<h1>Update in progress</h1>
+
+
 Meme One
 ====
 
 MemeOne is a WordPress plugin which allows to create memes right at your webpage.
 
-Changlog
+
+Changelog
 ====
 
 #### 1.1.5
