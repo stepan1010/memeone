@@ -151,10 +151,13 @@ function memeone_type_text(){
 	var context = canvas.getContext("2d");
 	var background = document.getElementById("memeone_background_picture");
 
+    var top_text_font_size = parseInt(document.getElementById("memeone_top_text_font_size").value);
+    var bottom_text_font_size = parseInt(document.getElementById("memeone_bottom_text_font_size").value);
+
 	memeone_clear_canvas(canvas, context, function(context){
 		memeone_draw_background(context, background, function(context){
-			memeone_type_top_text(canvas, context, background, function(context){
-				memeone_type_bottom_text(canvas, context, background);
+			memeone_type_top_text(canvas, context, background, top_text_font_size, function(context){
+				memeone_type_bottom_text(canvas, context, background, bottom_text_font_size);
 			});		
 		});
 	});	
@@ -170,44 +173,35 @@ function memeone_draw_background(context, background, cb) {
 	cb(context);
 }
 
-function memeone_type_top_text(canvas, context, background, cb) {
+function memeone_type_top_text(canvas, context, background, fontsize, cb) {
 	
 	var top_text = document.getElementById("memeone_meme_top_text");
 
-	var fontsize = 60;
 	background = background.width;
 	var spaceBetweenLines = fontsize + (fontsize / 10);
 	var maxWidth = background - Math.round(background / 8);
 
-	if (background >= 520) {
-	  var strokeWidth = 3.3;
-	} else {
-	  var strokeWidth =  2.4;
-	}
+	var strokeWidth = fontsize / 21;
 
-	context.font = fontsize.toString() + 'px Impact';
+	context.font = fontsize.toString() + 'px MemeoneFont';
 	memeone_wrap_text(context, top_text.value.toUpperCase(), canvas.width/2, fontsize + (fontsize/6), maxWidth, spaceBetweenLines, strokeWidth, fontsize);
 	cb(context);
 }
 
-function memeone_type_bottom_text(canvas, context, background) {
+function memeone_type_bottom_text(canvas, context, background, fontsize) {
 	
 	var top_text = document.getElementById("memeone_meme_bottom_text");
 
-	var fontsize = 60;
 	background = background.width;
 	var spaceBetweenLines = fontsize + (fontsize / 10);
 	var maxWidth = background - Math.round(background / 8);
 
-	if (background >= 520) {
-	  var strokeWidth = 3.3;
-	} else {
-	  var strokeWidth =  2.4;
-	}
+    var strokeWidth = fontsize / 21;
+	
 	var metrics = context.measureText(top_text.value.toUpperCase());
 	var numberOfLines = metrics.width / maxWidth;
 
-	context.font = fontsize.toString() + 'px Impact';
+	context.font = fontsize.toString() + 'px MemeoneFont';
 	
 	wrestlememesCountLines(context, top_text.value.toUpperCase(), maxWidth, function (numberOfLines) {
       memeone_wrap_text(context, top_text.value.toUpperCase(), canvas.width/2, (canvas.height - fontsize/3) - (spaceBetweenLines * numberOfLines), maxWidth, spaceBetweenLines, strokeWidth, fontsize);	
@@ -277,4 +271,22 @@ function memeone_wrap_text(context, text, x, y, maxWidth, lineHeight, strokeWidt
         context.strokeText(line, x+strokeCoords, y+strokeCoords);
         context.lineWidth = 1;
         context.fillText(line, x, y);
+}
+
+function memeone_submit_meme() {
+    var top_text = document.getElementById("memeone_meme_top_text").value;
+    var bottom_text = document.getElementById("memeone_meme_bottom_text").value;
+
+    // Do not submit if mainline is empty
+    if (top_text.trim().length == 0 && bottom_text.trim().length == 0){
+
+        memeone_print("Please enter text first.");
+        
+    } else {
+
+        // Move the meme from canvas to our hidden input tag
+        document.getElementById("memeone_created_meme").value = document.getElementById("memeone_canvas").toDataURL("image/jpeg");
+        // Submit the form.
+        document.forms["memeone_generator_form"].submit();
+    }
 }

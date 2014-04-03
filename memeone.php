@@ -198,10 +198,10 @@ function memeone_generator()
 
 	// Input form (for top_text and botton_text)
 	$generator .= '<form id="memeone_generator_form" name="memeone_generator_form" accept-charset="UTF-8" enctype="multipart/form-data" action='.$_SERVER['REQUEST_URI'].' method="POST">';
-	$generator .= '<div id="memeone_form_wrapper"><p>Enter main text:* <input type="text" id="memeone_meme_top_text" name="memeone_meme_top_text" tabindex=2 required="required" onkeyup="memeone_type_text();">';
-	$generator .= ' Font size: <input type="text" id="memeone_top_text_font_size" size=3 value="'. get_option('memeone_top_text_font_size') .'" tabindex=4 onkeyup="memeone_load_image();">&nbsp px</p>';
+	$generator .= '<div id="memeone_form_wrapper"><p>Enter main text:* <input type="text" id="memeone_meme_top_text" name="memeone_meme_top_text" tabindex=2 onkeyup="memeone_type_text();">';
+	$generator .= ' Font size: <input type="text" id="memeone_top_text_font_size" size=3 value="'. get_option('memeone_top_text_font_size') .'" tabindex=4 onkeyup="memeone_type_text();">&nbsp px</p>';
 	$generator .= '<p>Enter sub text: &nbsp&nbsp<input type="text" id="memeone_meme_bottom_text" name="memeone_meme_bottom_text" tabindex=3 onkeyup="memeone_type_text();">';
-	$generator .= ' Font size: <input type="text" id="memeone_bottom_text_font_size" size=3 value="'. get_option('memeone_botton_text_font_size') .'" tabindex=5 onkeyup="memeone_load_image();">&nbsp px</p></div>';
+	$generator .= ' Font size: <input type="text" id="memeone_bottom_text_font_size" size=3 value="'. get_option('memeone_bottom_text_font_size') .'" tabindex=5 onkeyup="memeone_type_text();">&nbsp px</p></div>';
     
     // Hidden input for created meme (For more info see memeone.js) 
     $generator .= '<input type="hidden" id="memeone_created_meme" name="memeone_created_meme" value="">';
@@ -210,6 +210,8 @@ function memeone_generator()
     $generator .= '<input type="button" id="memeone_submit" tabindex=6 onclick="memeone_submit_meme()" value="Create"/>';
     $generator .= '</form>';
     
+    $generator .= '<style>@font-face{font-family:MemeoneFont;src:url('.plugins_url('memeone/css/fonts/Anton.ttf').');font-weight:bold;}</style>';
+
     // Loading our memeone.js which is responsible for all the image processing
     $generator .= '<script type="text/javascript" src="'.plugins_url( 'memeone/js/memeone-generator.js').'"></script>';
     $generator .= '</div>';
@@ -258,8 +260,8 @@ function memeone_validate_input($POST)
 	$meme[0] = imagecreatefromstring(base64_decode($encoded_image)) or die ('Error processing image. Please try again.');
 
 	// Check if there is a top_text
-	if (strlen(trim($POST['memeone_meme_top_text'])) == 0 ){
-		die("Please type in the top_text.");
+	if (strlen(trim($POST['memeone_meme_top_text'])) == 0 && strlen(trim($POST['memeone_meme_bottom_text'])) == 0){
+		die("Please type in some text.");
 	}
 
 	$meme[1] = mysql_real_escape_string($POST['memeone_meme_top_text']);
@@ -285,6 +287,7 @@ function memeone_save_new_meme($meme)
 
 	// Create a WordPress post if needed
 	if (get_option('memeone_turn_memes_to_wp_posts') == 1){
+		
 		memeone_turn_meme_to_wp_post($meme_id);
 	}
 
