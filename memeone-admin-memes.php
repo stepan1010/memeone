@@ -44,6 +44,7 @@ echo '<a href="'.$_SERVER['PHP_SELF'].'?page=memeone-memes&delete_all_memes=1"><
 		<td><?php echo "<b>" . __( 'Creation Date' ) . "</b>"; ?></td>
 		<td><?php echo "<b>" . __( 'Author' ) . "</b>"; ?></td>
 		<td><?php echo "<b>" . __( 'Meme File Name' ) . "</b>"; ?></td>
+		<td><?php echo "<b>" . __( 'Background' ) . "</b>"; ?></td>
 		<td><?php echo "<b>" . __( 'Top text' ) . "</b>"; ?></td>
 		<td><?php echo "<b>" . __( 'Bottom text' ) . "</b>"; ?></td>
 		<td><?php echo "<b>" . __( 'WP Post ID' ) . "</b>"; ?></td>
@@ -58,6 +59,7 @@ echo '<a href="'.$_SERVER['PHP_SELF'].'?page=memeone-memes&delete_all_memes=1"><
 					$meme_info .= '<td>'.$meme->creation_date.'</td>';
 					$meme_info .= '<td>'.$meme->author.'</td>';
 					$meme_info .= '<td><a href="' .$meme->meme_url.$meme->meme_file_name.'.jpg' . '" target="_blank">'.$meme->meme_file_name.'</a></td>';
+					$meme_info .= '<td>'.$meme->background_name.'</td>';
 					$meme_info .= '<td>'.$meme->top_line.'</td>';
 					$meme_info .= '<td>'.$meme->bottom_line.'</td>';
 					

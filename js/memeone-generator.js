@@ -145,6 +145,7 @@ function memeone_load_image() {
         // Make error area visible
         error_area.style.display = "block";
     }
+    
 function memeone_type_text(){
 
 	var canvas = document.getElementById("memeone_canvas");
@@ -161,6 +162,23 @@ function memeone_type_text(){
 			});		
 		});
 	});	
+}
+
+function memeone_preload_image_to_canvas(){
+    var canvas = document.getElementById("memeone_canvas");
+    var context = canvas.getContext("2d");
+    var background = document.getElementById("memeone_background_picture");
+    console.log(background.width);
+    console.log(background.height);
+
+    canvas.width = background.width;
+    canvas.height = background.height;
+
+    memeone_draw_background(context, background, function(){
+        canvas.style.display = 'block';
+        canvas.style.position = 'inherit';
+        background.style.display = 'none';
+    });
 }
 
 function memeone_clear_canvas(canvas, context, cb){
@@ -181,7 +199,7 @@ function memeone_type_top_text(canvas, context, background, fontsize, cb) {
 	var spaceBetweenLines = fontsize + (fontsize / 10);
 	var maxWidth = background - Math.round(background / 8);
 
-	var strokeWidth = fontsize / 21;
+	var strokeWidth = fontsize / 15;
 
 	context.font = fontsize.toString() + 'px MemeoneFont';
 	memeone_wrap_text(context, top_text.value.toUpperCase(), canvas.width/2, fontsize + (fontsize/6), maxWidth, spaceBetweenLines, strokeWidth, fontsize);
@@ -196,21 +214,21 @@ function memeone_type_bottom_text(canvas, context, background, fontsize) {
 	var spaceBetweenLines = fontsize + (fontsize / 10);
 	var maxWidth = background - Math.round(background / 8);
 
-    var strokeWidth = fontsize / 21;
+    var strokeWidth = fontsize / 15;
 	
 	var metrics = context.measureText(top_text.value.toUpperCase());
 	var numberOfLines = metrics.width / maxWidth;
 
 	context.font = fontsize.toString() + 'px MemeoneFont';
 	
-	wrestlememesCountLines(context, top_text.value.toUpperCase(), maxWidth, function (numberOfLines) {
+	memeone_count_lines(context, top_text.value.toUpperCase(), maxWidth, function (numberOfLines) {
       memeone_wrap_text(context, top_text.value.toUpperCase(), canvas.width/2, (canvas.height - fontsize/3) - (spaceBetweenLines * numberOfLines), maxWidth, spaceBetweenLines, strokeWidth, fontsize);	
     });
 
 	//memeone_wrap_text(context, top_text.value.toUpperCase(), canvas.width/2, canvas.height - (fontsize * Math.ceil(numberOfLines)), maxWidth, spaceBetweenLines, strokeWidth, fontsize);
 }
 
-function wrestlememesCountLines(context, text, maxWidth, cb){
+function memeone_count_lines(context, text, maxWidth, cb){
     var words = text.split(' ');
     var lineCounter = 1;
     var line = '';

@@ -19,7 +19,7 @@ License: GPLv2
 
 /* This hook triggers before any content has been loaded to the page in order to check if 
 * the plugin is up to date. */ 
-add_action('init', 'memeone_check_version');
+add_action('plugins_loaded', 'memeone_check_version');
 function memeone_check_version()
 {
 	if(!get_option('memeone_version') || get_option('memeone_version') < 200){
@@ -27,12 +27,30 @@ function memeone_check_version()
 		global $wpdb;
 		$table_name = $wpdb->prefix . "memeone";
 		$wpdb->query("ALTER TABLE $table_name ADD meme_wp_post_id int(4) NOT NULL");
+		$wpdb->query("ALTER TABLE $table_name ADD background_name varchar(255) DEFAULT '' NOT NULL");
+
+		$table_name = $wpdb->prefix . "memeone_backgrounds";
+		$sql = "CREATE TABLE $table_name (
+		  id bigint(20) NOT NULL AUTO_INCREMENT,
+		  name varchar(255) DEFAULT '' NOT NULL,
+		  background_file_name varchar(255) NOT NULL,
+		  background_url varchar(255) NOT NULL,
+		  path_to_background varchar(255) NOT NULL,
+		  priority bigint(20) NOT NULL DEFAULT 1,
+		  UNIQUE KEY id (id)
+		);";
+
+		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+		dbDelta($sql);
 
 		delete_option('memeone_image_width_limit');
 		delete_option('memeone_image_height_limit');
 		delete_option('memeone_memes_per_page');				
 		delete_option('memeone_font_size');
+		delete_option('memeone_destination_folder_url');
 
+		update_option('memeone_font', plugin_dir_path( __FILE__ ).'css/fonts/Anton.ttf'); 
+		update_option('memeone_backgrounds_destination_folder', '/memeone-backgrounds/'); 
 		update_option('memeone_top_text_font_size', 60);
 		update_option('memeone_bottom_text_font_size', 60);
 		update_option('memeone_turn_memes_to_wp_posts', 1);
@@ -48,17 +66,25 @@ function memeone_uninstall()
  	// Delete all memes first
  	memeone_delete_all_memes();
 
+ 	// Then delete all backgrounds
+ 	memeone_delete_all_backgrounds();
+
  	// Delete plugin's database table
  	global $wpdb;
     $table_name = $wpdb->prefix . "memeone";
 	$wpdb->query("DROP TABLE IF EXISTS $table_name");
 
+	$table_name = $wpdb->prefix . "memeone_backgrounds";
+	$wpdb->query("DROP TABLE IF EXISTS $table_name");
+
 	// Delete all stored options
 	delete_option('memeone_top_text_font_size');
-	delete_option('memeone_botton_text_font_size');
+	delete_option('memeone_bottom_text_font_size');
 	delete_option('memeone_version');
 	delete_option('memeone_font');
 	delete_option('memeone_destination_folder');
+	delete_option('memeone_destination_folder_url');
+	delete_option('memeone_backgrounds_destination_folder');
 	delete_option('memeone_default_upload_url');
 	delete_option('memeone_default_upload_path');
 	delete_option('memeone_turn_memes_to_wp_posts');
@@ -73,21 +99,37 @@ function memeone_activate()
 {
 	// Create a table for our plugin to store info about created memes
 	global $wpdb;
+	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+
 	$table_name = $wpdb->prefix . "memeone";
 	$sql = "CREATE TABLE $table_name (
 	  id bigint(20) NOT NULL AUTO_INCREMENT,
 	  creation_date datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+	  background_name varchar(255) DEFAULT '' NOT NULL,
 	  meme_file_name varchar(255) NOT NULL,
 	  meme_url varchar(255) NOT NULL,
 	  path_to_meme varchar(255) NOT NULL,
 	  top_line varchar(25) NOT NULL,
 	  bottom_line varchar(48) NOT NULL,
 	  author varchar(55) DEFAULT '' NOT NULL,
-	  meme_wp_post_id int(4) NOT NULL
+	  meme_wp_post_id int(4) NOT NULL,
+	  UNIQUE KEY id (id)
+	);";
+	
+	dbDelta( $sql );
+
+	// Create a table for our plugin to store a list of backgrounds
+	$table_name = $wpdb->prefix . "memeone_backgrounds";
+	$sql = "CREATE TABLE $table_name (
+	  id bigint(20) NOT NULL AUTO_INCREMENT,
+	  name varchar(255) DEFAULT '' NOT NULL,
+	  background_file_name varchar(255) NOT NULL,
+	  background_url varchar(255) NOT NULL,
+	  path_to_background varchar(255) NOT NULL,
+	  priority bigint(20) NOT NULL DEFAULT 1,
 	  UNIQUE KEY id (id)
 	);";
 
-	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 	dbDelta( $sql );
 
 	// Default main text font size
@@ -96,8 +138,8 @@ function memeone_activate()
 	}
 
 	// Default sub text font size
-	if(!get_option('memeone_botton_text_font_size')){
-		update_option('memeone_botton_text_font_size', 60); 
+	if(!get_option('memeone_bottom_text_font_size')){
+		update_option('memeone_bottom_text_font_size', 60); 
 	}
 
 	$upload_dir = wp_upload_dir();
@@ -117,6 +159,11 @@ function memeone_activate()
 		update_option('memeone_destination_folder', '/memeone-memes/');
 	}
 
+	// Default folder to upload backgrounds to
+	if(!get_option('memeone_backgrounds_destination_folder')){
+		update_option('memeone_backgrounds_destination_folder', '/memeone-backgrounds/'); 
+	}
+
 	/* Option to determine what to do with memes after they've been created. Possibe values:
 	* 0 - Do nothing, just save meme to disk.
 	* 1 - Create WordPress posts with memes as content.
@@ -128,7 +175,12 @@ function memeone_activate()
 
 	// Default content of "Thank you" page
 	if(!get_option('memeone_thank_you_page')){
-		update_option('memeone_thank_you_page',"<p><h2>Thank you!</h2></p>\r\n<p>Your meme will be published shortly</p>");
+		update_option('memeone_thank_you_page',"<p><h2>Thank you!</h2></p>");
+	}
+
+	// Default path to font
+	if(!get_option('memeone_font')){
+		update_option('memeone_font', plugin_dir_path( __FILE__ ).'css/fonts/Anton.ttf'); 
 	}
 
 	update_option('memeone_version', 200);
@@ -146,7 +198,7 @@ function register_memeone_styles()
 add_action( 'admin_enqueue_scripts', 'memeone_admin_style' ); 
 function memeone_admin_style($hook) // Link our already registered script only to settings page of our plugin
 { 	
-	if( 'toplevel_page_memeone' == $hook || 'memeone_page_memeone-memes' == $hook){
+	if( 'toplevel_page_memeone' == $hook || 'memeone_page_memeone-memes' == $hook || 'memeone_page_memeone-backgrounds' == $hook){
      	wp_register_style( 'memeone_admin_style', plugins_url( 'css/memeone-style-admin.css', __FILE__ ) );
     	wp_enqueue_style( 'memeone_admin_style' );
     }else{
@@ -175,17 +227,69 @@ function memeone_load_plugin()
 
 	// If this is a redirect to Thank you page then return the Thank you page
 	if (isset($_GET['thankyou'])) {
+
 		return memeone_thank_you_page($_GET['meme']);
+	} else if (isset($_GET['bg'])){
+
+		// Display the generator form with selected background
+		return memeone_generator_selected_bg($_GET['bg']);
+	} else if (isset($_GET['nobg'])){
+
+		// Display the generator form with an option of uploading custom background
+		return memeone_generator_custom_bg();
 	} else {
-		// Display the generator form if it's neither
-		return memeone_generator();
+
+		// Display available backgrounds to choose from
+		return memeone_load_backgrounds();
 	}
 }
 
+function memeone_generator_selected_bg($bg_name)
+{
+	$background_info = memeone_get_backgrounds($bg_name);
+		
+		if (empty($background_info)) {
+		return memeone_generator_custom_bg();
+	}
+
+	$generator = '<div id="memeone-plugin" class="widget">';
+
+	 // Loading our memeone.js which is responsible for all the image processing
+    $generator .= '<script type="text/javascript" src="' . plugins_url( 'memeone/js/memeone-generator.js') . '"></script>';
+	
+	$generator .= '<div id="memeone_meme_placeholder"><img id="memeone_background_picture" onload="memeone_preload_image_to_canvas();" src="' .$background_info->background_url . $background_info->background_file_name . '.jpg" </div>';
+	$generator .= '<div id="memeone_canvas_placeholder"><p><canvas id="memeone_canvas"></canvas></p></div>';
+	$generator .= '<div id="memeone_error_message_area"></div>';
+
+	// Input form (for top_text and botton_text)
+	$generator .= '<form id="memeone_generator_form_displayed" name="memeone_generator_form" accept-charset="UTF-8" enctype="multipart/form-data" action='.$_SERVER['REQUEST_URI'].' method="POST">';
+	$generator .= '<div id="memeone_form_wrapper"><p>Enter main text: <input type="text" id="memeone_meme_top_text" name="memeone_meme_top_text" tabindex=2 onkeyup="memeone_type_text();">';
+	$generator .= ' Font size: <input type="text" id="memeone_top_text_font_size" size=3 value="'. get_option('memeone_top_text_font_size') .'" tabindex=4 onkeyup="memeone_type_text();">&nbsp px</p>';
+	$generator .= '<p>Enter sub text: &nbsp&nbsp<input type="text" id="memeone_meme_bottom_text" name="memeone_meme_bottom_text" tabindex=3 onkeyup="memeone_type_text();">';
+	$generator .= ' Font size: <input type="text" id="memeone_bottom_text_font_size" size=3 value="'. get_option('memeone_bottom_text_font_size') .'" tabindex=5 onkeyup="memeone_type_text();">&nbsp px</p></div>';
+    
+    // Hidden input for created meme (For more info see memeone.js) 
+    $generator .= '<input type="hidden" id="memeone_created_meme" name="memeone_created_meme" value="">';
+    $generator .= '<input type="hidden" name="memeone_background_name" id="memeone_background_name" value="'.$background_info->name.'"/>';
+
+    // Submit button
+    $generator .= '<input type="button" id="memeone_submit" tabindex=6 onclick="memeone_submit_meme()" value="Create"/>';
+    $generator .= '</form>';
+    
+    $generator .= '<style>@font-face{font-family:MemeoneFont;src:url('.plugins_url('memeone/css/fonts/Anton.ttf').');font-weight:bold;}</style>';
+
+    $generator .= '</div>';
+
+	return $generator;
+}
+
 // Create generator form
-function memeone_generator()
+function memeone_generator_custom_bg()
 {
 	$generator = '<div id="memeone-plugin" class="widget">';
+
+	// Loading our memeone.js which is responsible for all the image processing
+    $generator .= '<script type="text/javascript" src="' . plugins_url( 'memeone/js/memeone-generator.js') . '"></script>';
 	
 	// File input
     $generator .= '<p> Please select a picture you would like to turn into a meme and click "Upload". <input type="file" id="memeone_imgfile" />';
@@ -198,7 +302,7 @@ function memeone_generator()
 
 	// Input form (for top_text and botton_text)
 	$generator .= '<form id="memeone_generator_form" name="memeone_generator_form" accept-charset="UTF-8" enctype="multipart/form-data" action='.$_SERVER['REQUEST_URI'].' method="POST">';
-	$generator .= '<div id="memeone_form_wrapper"><p>Enter main text:* <input type="text" id="memeone_meme_top_text" name="memeone_meme_top_text" tabindex=2 onkeyup="memeone_type_text();">';
+	$generator .= '<div id="memeone_form_wrapper"><p>Enter main text: <input type="text" id="memeone_meme_top_text" name="memeone_meme_top_text" tabindex=2 onkeyup="memeone_type_text();">';
 	$generator .= ' Font size: <input type="text" id="memeone_top_text_font_size" size=3 value="'. get_option('memeone_top_text_font_size') .'" tabindex=4 onkeyup="memeone_type_text();">&nbsp px</p>';
 	$generator .= '<p>Enter sub text: &nbsp&nbsp<input type="text" id="memeone_meme_bottom_text" name="memeone_meme_bottom_text" tabindex=3 onkeyup="memeone_type_text();">';
 	$generator .= ' Font size: <input type="text" id="memeone_bottom_text_font_size" size=3 value="'. get_option('memeone_bottom_text_font_size') .'" tabindex=5 onkeyup="memeone_type_text();">&nbsp px</p></div>';
@@ -210,13 +314,52 @@ function memeone_generator()
     $generator .= '<input type="button" id="memeone_submit" tabindex=6 onclick="memeone_submit_meme()" value="Create"/>';
     $generator .= '</form>';
     
-    $generator .= '<style>@font-face{font-family:MemeoneFont;src:url('.plugins_url('memeone/css/fonts/Anton.ttf').');font-weight:bold;}</style>';
+    $generator .= '<style>@font-face{font-family:MemeoneFont;src:url(' . plugins_url('memeone/css/fonts/Anton.ttf') . ');font-weight:bold;}</style>';
 
-    // Loading our memeone.js which is responsible for all the image processing
-    $generator .= '<script type="text/javascript" src="'.plugins_url( 'memeone/js/memeone-generator.js').'"></script>';
     $generator .= '</div>';
 
 	return $generator;
+}
+
+function memeone_load_backgrounds()
+{
+	$backgrounds = memeone_get_backgrounds();
+
+	$gallery = "";
+	$gallery .= '<div id="memeone_backgrounds" class="widget">';
+	$gallery .= '<p>Please, select background for your meme. You can also <a href="' . strtok($_SERVER['REQUEST_URI'], '?') . '?nobg=">upload your own</a>.</p>';
+	$gallery .= '<div id="memeone_backgrounds_table">';
+
+	foreach ($backgrounds as $background) {
+
+		$gallery .= '<span>';
+		$gallery .= '<a href="' . $_SERVER['REQUEST_URI'] . '?bg=' . $background->background_file_name . '">';
+		$gallery .= '<img class="memeone_background" src="' . $background->background_url . $background->background_file_name .'.jpg" />';
+		$gallery .= '</a></span>';
+
+	}
+
+	$gallery .= '</div></div>';
+	
+	return $gallery;
+	die();
+}
+
+function memeone_get_backgrounds($background_name = "", $background_id = "")
+{
+	global $wpdb;
+	$table_name = $wpdb->prefix . "memeone_backgrounds";
+
+	if ($background_name != "") {
+		return $wpdb->get_row("SELECT * FROM $table_name WHERE background_file_name = '$background_name'");
+		die();
+	} elseif ($background_id != ""){
+		return $wpdb->get_row("SELECT * FROM $table_name WHERE id = '$background_id'");		
+		die();
+	} else {
+		return $wpdb->get_results("SELECT * FROM $table_name ORDER BY priority ASC");
+		die();
+	}
 }
 
 // Generate Thank you page ($meme_id is needed in case the meme should be displayed on Thank you page)
@@ -266,6 +409,7 @@ function memeone_validate_input($POST)
 
 	$meme[1] = mysql_real_escape_string($POST['memeone_meme_top_text']);
 	$meme[2] = mysql_real_escape_string($POST['memeone_meme_bottom_text']);
+	$meme[3] = mysql_real_escape_string($POST['memeone_background_name']);
 
 	return $meme;
 }
@@ -331,6 +475,7 @@ function memeone_write_meme_to_db($meme, $meme_filename)
 	$table_name = $wpdb->prefix . "memeone";
 	$wpdb->insert($table_name, array( 
 		'creation_date' => current_time('mysql'),
+		'background_name' => mysql_real_escape_string($meme[3]),
 		'meme_file_name' => mysql_real_escape_string($meme_filename),
 		'meme_url' => mysql_real_escape_string(get_option('memeone_default_upload_url') . get_option('memeone_destination_folder')),
 		'path_to_meme' => mysql_real_escape_string(get_option('memeone_default_upload_path') . get_option('memeone_destination_folder')), 
@@ -355,8 +500,10 @@ function memeone_turn_meme_to_wp_post($meme_id)
 		return;
 	}
 
+	$post_title = trim($meme->top_line) == '' ? str_replace("\\", "", $meme->bottom_line) : str_replace("\\", "", $meme->top_line);
+
 	$new_wp_post= array(
-	  'post_title'     => str_replace("\\", "", $meme->top_line),
+	  'post_title'     => $post_title,
 	  'post_content'   => '<img src="'. $meme->meme_url . $meme->meme_file_name.'.jpg' . '" />',
 	  'post_status'    => 'pending',
 	  'post_author'    => 1
@@ -374,7 +521,7 @@ function memeone_turn_meme_to_wp_post($meme_id)
 function memeone_redirect_to_thank_you_page($meme_id)
 {
 	$string = '<script type="text/javascript">';
-	$string .= 'window.location = "' . $_SERVER['REQUEST_URI'] . '?thankyou=&meme=' . $meme_id . '"';
+	$string .= 'window.location = "' . strtok($_SERVER["REQUEST_URI"],'?') . '?thankyou=&meme=' . $meme_id . '"';
 	$string .= '</script>';
 
 	echo $string;
@@ -429,6 +576,17 @@ function memeone_include_admin_memes_page()
 	include('memeone-admin-memes.php');
 }
 
+add_action('admin_menu', 'memeone_init_admin_backgrounds_page');
+function memeone_init_admin_backgrounds_page()
+{
+	add_submenu_page( 'memeone', 'MemeOne Backgrounds', 'Backgrounds', 'edit_others_posts', 'memeone-backgrounds', 'memeone_include_admin_backgrounds_page' ); 
+}
+
+function memeone_include_admin_backgrounds_page()
+{	
+	include('memeone-admin-backgrounds.php');
+}
+
 // Delete the meme from database and from server
 function memeone_delete_meme($meme_id)
 {
@@ -472,6 +630,24 @@ function memeone_delete_all_memes()
 			if ($meme->meme_wp_post_id != 0) {
 				wp_delete_post($meme->meme_wp_post_id, true);
 			}
+		}
+	}
+}
+
+// Function to delete all backgrounds
+function memeone_delete_all_backgrounds()
+{	
+	// Get info about all the backgrounds we have
+	global $wpdb;
+
+	$table_name = $wpdb->prefix . "memeone_backgrounds";
+	$list_of_bgs = $wpdb->get_results("SELECT * FROM $table_name");
+	
+	// Loop through every background and delete it
+	foreach($list_of_bgs as $bg){ 
+		if (unlink($bg->path_to_background . $bg->background_file_name . '.jpg')){
+			
+			$wpdb->delete($table_name, array('id' => $bg->id));
 		}
 	}
 }
