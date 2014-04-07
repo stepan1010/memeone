@@ -49,8 +49,3 @@
 	border-style: none;
 	width: inherit !important;
 }
-
-@font-face {
-    font-family: 'FreeSerif';
-    src: url('fonts/FreeSerif.ttf');
-}

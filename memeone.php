@@ -10,7 +10,7 @@ License: GPLv2
 */
 
 /*
-* This is the main file of Motivation Generator plugin for WordPress.
+* This is the main file of MemeOne plugin for WordPress.
 * The plugin is run via a shortcode [memeone_plugin] which triggers form generator function.
 * Once the form is generated it's all javascript from there. All the image processing is handled by memeone.js
 * After the meme is done it is submitted to the server.
@@ -49,7 +49,7 @@ function memeone_check_version()
 		delete_option('memeone_font_size');
 		delete_option('memeone_destination_folder_url');
 
-		update_option('memeone_font', plugin_dir_path( __FILE__ ).'css/fonts/Anton.ttf'); 
+		update_option('memeone_font', 'css/fonts/Anton.ttf'); 
 		update_option('memeone_backgrounds_destination_folder', '/memeone-backgrounds/'); 
 		update_option('memeone_top_text_font_size', 60);
 		update_option('memeone_bottom_text_font_size', 60);
@@ -180,7 +180,7 @@ function memeone_activate()
 
 	// Default path to font
 	if(!get_option('memeone_font')){
-		update_option('memeone_font', plugin_dir_path( __FILE__ ).'css/fonts/Anton.ttf'); 
+		update_option('memeone_font', 'css/fonts/Anton.ttf'); 
 	}
 
 	update_option('memeone_version', 200);
@@ -254,9 +254,10 @@ function memeone_generator_selected_bg($bg_name)
 
 	$generator = '<div id="memeone-plugin" class="widget">';
 
-	 // Loading our memeone.js which is responsible for all the image processing
-    $generator .= '<script type="text/javascript" src="' . plugins_url( 'memeone/js/memeone-generator.js') . '"></script>';
+	// Loading our memeone.js which is responsible for all the image processing
+    $generator .= '<script type="text/javascript" src="' . plugins_url( 'memeone/js/memeone-generator.min.js') . '"></script>';
 	
+	// Loading canvas, hidden div to store background (see memeone.js for more info) and error message area
 	$generator .= '<div id="memeone_meme_placeholder"><img id="memeone_background_picture" onload="memeone_preload_image_to_canvas();" src="' .$background_info->background_url . $background_info->background_file_name . '.jpg" </div>';
 	$generator .= '<div id="memeone_canvas_placeholder"><p><canvas id="memeone_canvas"></canvas></p></div>';
 	$generator .= '<div id="memeone_error_message_area"></div>';
@@ -276,7 +277,8 @@ function memeone_generator_selected_bg($bg_name)
     $generator .= '<input type="button" id="memeone_submit" tabindex=6 onclick="memeone_submit_meme()" value="Create"/>';
     $generator .= '</form>';
     
-    $generator .= '<style>@font-face{font-family:MemeoneFont;src:url('.plugins_url('memeone/css/fonts/Anton.ttf').');font-weight:bold;}</style>';
+    // 
+    $generator .= '<style>@font-face{font-family:MemeoneFont;src:url(' . plugins_url('memeone/' . get_option('memeone_font')) . ');font-weight:bold;}</style>';
 
     $generator .= '</div>';
 
@@ -289,7 +291,7 @@ function memeone_generator_custom_bg()
 	$generator = '<div id="memeone-plugin" class="widget">';
 
 	// Loading our memeone.js which is responsible for all the image processing
-    $generator .= '<script type="text/javascript" src="' . plugins_url( 'memeone/js/memeone-generator.js') . '"></script>';
+    $generator .= '<script type="text/javascript" src="' . plugins_url( 'memeone/js/memeone-generator.min.js') . '"></script>';
 	
 	// File input
     $generator .= '<p> Please select a picture you would like to turn into a meme and click "Upload". <input type="file" id="memeone_imgfile" />';
@@ -314,13 +316,14 @@ function memeone_generator_custom_bg()
     $generator .= '<input type="button" id="memeone_submit" tabindex=6 onclick="memeone_submit_meme()" value="Create"/>';
     $generator .= '</form>';
     
-    $generator .= '<style>@font-face{font-family:MemeoneFont;src:url(' . plugins_url('memeone/css/fonts/Anton.ttf') . ');font-weight:bold;}</style>';
+    $generator .= '<style>@font-face{font-family:MemeoneFont;src:url(' . plugins_url('memeone/' . get_option('memeone_font')) . ');font-weight:bold;}</style>';
 
     $generator .= '</div>';
 
 	return $generator;
 }
 
+// Display list of available backgrounds
 function memeone_load_backgrounds()
 {
 	$backgrounds = memeone_get_backgrounds();
