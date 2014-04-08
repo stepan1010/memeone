@@ -26,8 +26,10 @@ function memeone_check_version()
 
 		global $wpdb;
 		$table_name = $wpdb->prefix . "memeone";
-		$wpdb->query("ALTER TABLE $table_name ADD meme_wp_post_id int(4) NOT NULL");
+		$wpdb->query("ALTER TABLE $table_name MODIFY top_line varchar(255) NOT NULL");
+		$wpdb->query("ALTER TABLE $table_name MODIFY bottom_line varchar(255) NOT NULL");
 		$wpdb->query("ALTER TABLE $table_name ADD background_name varchar(255) DEFAULT '' NOT NULL");
+		$wpdb->query("ALTER TABLE $table_name ADD meme_wp_post_id int(4) NOT NULL");
 
 		$table_name = $wpdb->prefix . "memeone_backgrounds";
 		$sql = "CREATE TABLE $table_name (
@@ -109,8 +111,8 @@ function memeone_activate()
 	  meme_file_name varchar(255) NOT NULL,
 	  meme_url varchar(255) NOT NULL,
 	  path_to_meme varchar(255) NOT NULL,
-	  top_line varchar(25) NOT NULL,
-	  bottom_line varchar(48) NOT NULL,
+	  top_line varchar(255) NOT NULL,
+	  bottom_line varchar(255) NOT NULL,
 	  author varchar(55) DEFAULT '' NOT NULL,
 	  meme_wp_post_id int(4) NOT NULL,
 	  UNIQUE KEY id (id)
@@ -264,7 +266,7 @@ function memeone_generator_selected_bg($bg_name)
 
 	// Input form (for top_text and botton_text)
 	$generator .= '<form id="memeone_generator_form_displayed" name="memeone_generator_form" accept-charset="UTF-8" enctype="multipart/form-data" action='.$_SERVER['REQUEST_URI'].' method="POST">';
-	$generator .= '<div id="memeone_form_wrapper"><p>Enter main text: <input type="text" id="memeone_meme_top_text" name="memeone_meme_top_text" tabindex=2 onkeyup="memeone_type_text();">';
+	$generator .= '<div id="memeone_form_wrapper"><p>Enter top text: <input type="text" id="memeone_meme_top_text" name="memeone_meme_top_text" tabindex=2 onkeyup="memeone_type_text();">';
 	$generator .= ' Font size: <input type="text" id="memeone_top_text_font_size" size=3 value="'. get_option('memeone_top_text_font_size') .'" tabindex=4 onkeyup="memeone_type_text();">&nbsp px</p>';
 	$generator .= '<p>Enter sub text: &nbsp&nbsp<input type="text" id="memeone_meme_bottom_text" name="memeone_meme_bottom_text" tabindex=3 onkeyup="memeone_type_text();">';
 	$generator .= ' Font size: <input type="text" id="memeone_bottom_text_font_size" size=3 value="'. get_option('memeone_bottom_text_font_size') .'" tabindex=5 onkeyup="memeone_type_text();">&nbsp px</p></div>';
@@ -304,7 +306,7 @@ function memeone_generator_custom_bg()
 
 	// Input form (for top_text and botton_text)
 	$generator .= '<form id="memeone_generator_form" name="memeone_generator_form" accept-charset="UTF-8" enctype="multipart/form-data" action='.$_SERVER['REQUEST_URI'].' method="POST">';
-	$generator .= '<div id="memeone_form_wrapper"><p>Enter main text: <input type="text" id="memeone_meme_top_text" name="memeone_meme_top_text" tabindex=2 onkeyup="memeone_type_text();">';
+	$generator .= '<div id="memeone_form_wrapper"><p>Enter top text: <input type="text" id="memeone_meme_top_text" name="memeone_meme_top_text" tabindex=2 onkeyup="memeone_type_text();">';
 	$generator .= ' Font size: <input type="text" id="memeone_top_text_font_size" size=3 value="'. get_option('memeone_top_text_font_size') .'" tabindex=4 onkeyup="memeone_type_text();">&nbsp px</p>';
 	$generator .= '<p>Enter sub text: &nbsp&nbsp<input type="text" id="memeone_meme_bottom_text" name="memeone_meme_bottom_text" tabindex=3 onkeyup="memeone_type_text();">';
 	$generator .= ' Font size: <input type="text" id="memeone_bottom_text_font_size" size=3 value="'. get_option('memeone_bottom_text_font_size') .'" tabindex=5 onkeyup="memeone_type_text();">&nbsp px</p></div>';

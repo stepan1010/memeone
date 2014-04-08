@@ -1,14 +1,16 @@
 <?php
 
-// Header for our settings page$new_background_form .= '';
+// Header for our settings page
 $settings_page = '<div class="wrap">';
 $settings_page .= "<h2>" . __( 'Memeone Backgrounds' ) . "</h2><hr />"; 
 
+// The url can recieve a GET parameter to delete the background
 if(isset($_GET['delete_id']) && is_numeric($_GET['delete_id']))
 {
 	memeone_delete_background($_GET['delete_id']);
 }
 
+// If this is a form submission for backgrounds priorities, then make corresponding changes
 if(isset($_POST['memeone_priority_table_save_changes']) && $_POST['memeone_priority_table_save_changes'] == 'Y'){
 	array_pop($_POST);
 
@@ -25,11 +27,12 @@ if(isset($_POST['memeone_priority_table_save_changes']) && $_POST['memeone_prior
 	memeone_post_redirect_get();
 }
 
-// If this is a form submission, update options
+// If this is a form submission for a new background, then process it and save to database
 if(isset($_POST['memeone_new_background_form_save_changes']) && $_POST['memeone_new_background_form_save_changes'] == 'Y'){
 	
 	$hasError = false;
 
+	// Check if the new background is or right size and has correct extension
 	if($_FILES['memeone_new_background_picture']['tmp_name'] != "" && $_FILES['memeone_new_background_picture']['size'] < 2097152 && ($_FILES['memeone_new_background_picture']['type'] == 'image/jpeg' || $_FILES['memeone_new_background_picture']['type'] == 'image/png')){
 			$picture = $_FILES['memeone_new_background_picture']['tmp_name'];
 	}else{
@@ -38,6 +41,7 @@ if(isset($_POST['memeone_new_background_form_save_changes']) && $_POST['memeone_
 		$picture_message = '<font color="red"><b>Select a background (max 2mb. .png or .jpg)* </b></font>';
 	}
 
+	// Check if there is a name for the background
 	if(isset($_POST['memeone_new_background_name']) && $_POST['memeone_new_background_name'] != ''){
 		$name = $_POST['memeone_new_background_name'];
 	} else {
@@ -46,6 +50,7 @@ if(isset($_POST['memeone_new_background_form_save_changes']) && $_POST['memeone_
 		$name_message = '<font color="red"><b>Enter backgrounds name* </b></font>';
 	}
 
+	// Check if backgrounds priority has been set.
 	if(isset($_POST['memeone_new_background_prio']) && $_POST['memeone_new_background_prio'] != ''){
 		$priority = $_POST['memeone_new_background_prio'];
 	} else {		
@@ -53,46 +58,53 @@ if(isset($_POST['memeone_new_background_form_save_changes']) && $_POST['memeone_
 		$prio_message = '<font color="red"><b>Enter backgrounds priority* </b></font>';
 	}
 
+	// If there was at least on error, print the settings page with corresponding messages
 	if($hasError){ 
 		$settings_page .= memeone_get_backgrounds_settings_page($picture_message, $name_message, $prio_message);
 	} else {
+
+	// If there were no errors, then save the background
 		memeone_save_new_background($picture, $name, $priority);
 		$settings_page .= '<div class="updated"> <p>Changes saved</p></div>';
 		$settings_page .= memeone_get_backgrounds_settings_page();		
 	}	
 } else {
+
+	// Just print the form if this is not a form submission
 	$settings_page .= memeone_get_backgrounds_settings_page();
 }
 
 $settings_page .= memeone_get_backgrounds_list();
 echo $settings_page;
 
+// This function is used to generate new background submission form
 function memeone_get_backgrounds_settings_page($picture_msg = "", $name_msg = "", $priority_msg = "")
 {
-//	Prepare the settings form
+	// Do we have any error messages to print?
 	$picture_msg = $picture_msg == "" ? 'Select a background (max 2mb. .png or .jpg)* ' : $picture_msg;
 	$name_msg = $name_msg == "" ? 'Enter backgrounds name* ' : $name_msg;
 	$priority_msg = $priority_msg == "" ? 'Enter backgrounds priority* ' : $priority_msg;
 
-$new_background_form = '';
-$new_background_form .= '<form enctype="multipart/form-data" name="memeone_new_background_form" method="post" action="'.str_replace( '%7E', '~', $_SERVER['REQUEST_URI']).'">';
-$new_background_form .= '<div class="memeone_input">'.$picture_msg;
-$new_background_form .= '<input type="hidden" name="MAX_FILE_SIZE" value="2097152" />';
-$new_background_form .= '<input name="memeone_new_background_picture" type="file" /> </div>';
+	$new_background_form = '';
+	$new_background_form .= '<form enctype="multipart/form-data" name="memeone_new_background_form" method="post" action="'.str_replace( '%7E', '~', $_SERVER['REQUEST_URI']).'">';
+	$new_background_form .= '<div class="memeone_input">'.$picture_msg;
+	$new_background_form .= '<input type="hidden" name="MAX_FILE_SIZE" value="2097152" />';
+	$new_background_form .= '<input name="memeone_new_background_picture" type="file" /> </div>';
 
-$new_background_form .= '<div class="memeone_input">'.$name_msg;
-$new_background_form .= '<input name="memeone_new_background_name" type="text" maxlength="250" value=""/></div>';
+	$new_background_form .= '<div class="memeone_input">'.$name_msg;
+	$new_background_form .= '<input name="memeone_new_background_name" type="text" maxlength="250" value=""/></div>';
 
-$new_background_form .= '<div class="memeone_input">'.$priority_msg;
-$new_background_form .= '<input name="memeone_new_background_prio" type="text" value="1"/></div>';
+	$new_background_form .= '<div class="memeone_input">'.$priority_msg;
+	$new_background_form .= '<input name="memeone_new_background_prio" type="text" value="1"/></div>';
 
-$new_background_form .= '<input type="hidden" name="memeone_new_background_form_save_changes" value="Y" />';
-$new_background_form .= '<input type="submit" value="Save Options" />';
-$new_background_form .= '</form><br /><br />';
+	$new_background_form .= '<input type="hidden" name="memeone_new_background_form_save_changes" value="Y" />';
+	$new_background_form .= '<input type="submit" value="Save Background" />';
+	$new_background_form .= '</form><br /><br />';
 
-return $new_background_form;
+	return $new_background_form;
 }
 
+// This function is used to build a table of currently saved backgrounds
 function memeone_get_backgrounds_list()
 {
 	$backgroundlist = '';
@@ -104,6 +116,7 @@ function memeone_get_backgrounds_list()
 		$backgroundlist .= '<div class="memeone_admin_error">No backgrounds</div>';
 		$backgroundlist .= '</div>';
 		return $backgroundlist;
+
 	}else{
 
 		$backgroundlist .= '<form enctype="multipart/form-data" name="memeone_priority_table" method="post" action="'.str_replace( '%7E', '~', $_SERVER['REQUEST_URI']).'">';
@@ -140,6 +153,7 @@ function memeone_get_backgrounds_list()
 	}
 }
 
+// This function is used to delete the background by id
 function memeone_delete_background($background_id)
 {
 	// Delete corresponding record from db
@@ -157,11 +171,14 @@ function memeone_delete_background($background_id)
 	memeone_post_redirect_get();
 }
 
+// This function is used for saving newly submitted background
 function memeone_save_new_background($background, $name, $priority)
 {
+	// Where do we save the background?
 	$destination_folder = get_option('memeone_default_upload_path').get_option('memeone_backgrounds_destination_folder');
 	$destination_url = get_option('memeone_default_upload_url').get_option('memeone_backgrounds_destination_folder');
 
+	// Create directory if it doesn't exist
 	if (!file_exists($destination_folder)) {
     	mkdir($destination_folder, 0777, true);
 	}	
@@ -174,7 +191,6 @@ function memeone_save_new_background($background, $name, $priority)
 		break;
 	
 	case IMAGETYPE_PNG:
-	
 		$background = imagecreatefromPNG($background);
 		break;
 	default:
@@ -186,10 +202,33 @@ function memeone_save_new_background($background, $name, $priority)
 		$priority = 1;
 	}
 
+	// Generate a new name for a background file (based on the name given during submission)
 	$new_picture_name = str_replace(" ", "_", (strtolower($name)));
 	$new_picture_name = preg_replace("/[^a-zA-Z0-9_-]+/", "", $new_picture_name);
-	imagejpeg($background,  $destination_folder.$new_picture_name.".jpg", 100) or die ('Error writing poster to file. Please check if directory exists and its permissions.');
 
+	// Resize image
+	$width = 600;
+	$height = 600;
+
+	$width_orig = $imageproperties[0];
+	$height_orig = $imageproperties[1];
+
+	$ratio_orig = $width_orig / $height_orig;
+
+	if ($width / $height > $ratio_orig) {
+	   $width = $height * $ratio_orig;
+	} else {
+	   $height = $width / $ratio_orig;
+	}
+
+	$new_background_image = imagecreatetruecolor($width, $height);
+
+	imagecopyresampled($new_background_image, $background, 0, 0, 0, 0, $width, $height, $width_orig, $height_orig);
+
+	// Write the background to disk
+	imagejpeg($new_background_image,  $destination_folder . $new_picture_name.".jpg", 100) or die ('Error writing poster to file. Please check if directory exists and its permissions.');
+
+	// Add a record to database
 	global $wpdb;
 	$table_name = $wpdb->prefix . "memeone_backgrounds";
 	$wpdb->insert($table_name, array( 
@@ -203,6 +242,7 @@ function memeone_save_new_background($background, $name, $priority)
 	memeone_post_redirect_get();
 }
 
+// This function updates priority for a given background
 function memeone_update_background_prio($background_id, $new_prio)
 {
 	global $wpdb;
