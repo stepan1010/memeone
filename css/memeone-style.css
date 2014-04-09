@@ -24,8 +24,10 @@
 	border-radius: inherit !important;
 }
 
-.memeone_hidden{
-	display: none;
+#memeone_font_loader {
+	font-family: MemeoneFont !important;
+	visibility: hidden !important;
+	position: absolute !important;
 }
 
 #memeone_form_wrapper {

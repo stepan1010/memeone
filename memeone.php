@@ -256,6 +256,10 @@ function memeone_generator_selected_bg($bg_name)
 
 	$generator = '<div id="memeone-plugin" class="widget">';
 
+	// Preload our font
+	$generator .= '<style>@font-face{font-family:MemeoneFont;src:url(' . plugins_url('memeone/' . get_option('memeone_font')) . ');font-weight:bold;}</style>';
+	$generator .= '<span id="memeone_font_loader">_</span>';
+
 	// Loading our memeone.js which is responsible for all the image processing
     $generator .= '<script type="text/javascript" src="' . plugins_url( 'memeone/js/memeone-generator.min.js') . '"></script>';
 	
@@ -278,9 +282,6 @@ function memeone_generator_selected_bg($bg_name)
     // Submit button
     $generator .= '<input type="button" id="memeone_submit" tabindex=6 onclick="memeone_submit_meme()" value="Create"/>';
     $generator .= '</form>';
-    
-    // 
-    $generator .= '<style>@font-face{font-family:MemeoneFont;src:url(' . plugins_url('memeone/' . get_option('memeone_font')) . ');font-weight:bold;}</style>';
 
     $generator .= '</div>';
 
@@ -291,6 +292,10 @@ function memeone_generator_selected_bg($bg_name)
 function memeone_generator_custom_bg()
 {
 	$generator = '<div id="memeone-plugin" class="widget">';
+
+	// Preload our font
+	$generator .= '<style>@font-face{font-family:MemeoneFont;src:url(' . plugins_url('memeone/' . get_option('memeone_font')) . ');font-weight:bold;}</style>';
+	$generator .= '<span id="memeone_font_loader">_</span>';
 
 	// Loading our memeone.js which is responsible for all the image processing
     $generator .= '<script type="text/javascript" src="' . plugins_url( 'memeone/js/memeone-generator.min.js') . '"></script>';
@@ -317,8 +322,6 @@ function memeone_generator_custom_bg()
     // Submit button
     $generator .= '<input type="button" id="memeone_submit" tabindex=6 onclick="memeone_submit_meme()" value="Create"/>';
     $generator .= '</form>';
-    
-    $generator .= '<style>@font-face{font-family:MemeoneFont;src:url(' . plugins_url('memeone/' . get_option('memeone_font')) . ');font-weight:bold;}</style>';
 
     $generator .= '</div>';
 

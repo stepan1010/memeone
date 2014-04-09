@@ -130,13 +130,13 @@ function memeone_get_backgrounds_list()
 		foreach ( $backgrounds as $background ) // Print info about posters
 			{					
 				$backgroundlist .= '<tr>';
-				$backgroundlist .= '<td>'.$background->id.'</td>';
+				$backgroundlist .= '<td>' . $background->id . '</td>';
 		
-				$backgroundlist .= '<td><a href="'. $background->background_url.$background->background_file_name.'.jpg' . '" target="_blank">'.$background->name.'</a></td>';
+				$backgroundlist .= '<td><a href="' . $background->background_url . $background->background_file_name . '.jpg' . '" target="_blank">' . str_replace("\\", "", $background->name) . '</a></td>';
 
-				$backgroundlist .= '<td><input type="text" class="priority_index_input" name="inline_index_'.$background->id.'" value="'.$background->priority.'" /></td>';
+				$backgroundlist .= '<td><input type="text" class="priority_index_input" name="inline_index_' . $background->id . '" value="' . $background->priority . '" /></td>';
 
-				$backgroundlist .= '<td><a href="'.$_SERVER['PHP_SELF'].'?page=memeone-backgrounds&delete_id='.$background->id.'">';
+				$backgroundlist .= '<td><a href="' . $_SERVER['PHP_SELF'].'?page=memeone-backgrounds&delete_id=' . $background->id . '">';
 				$backgroundlist .= '<img class="memeone_delete_meme_image" src="' . plugins_url( 'images/delete_button.png' , __FILE__ ) . '" >';
 				$backgroundlist .= '</a></td>';
 				
@@ -162,7 +162,7 @@ function memeone_delete_background($background_id)
 	$background = $wpdb->get_row("SELECT * FROM $table_name WHERE id = $background_id");
 	
 	// Delete the file if it exists
-	if(unlink($background->path_to_background.$background->background_file_name.'.jpg')){
+	if(unlink($background->path_to_background.$background->background_file_name . '.jpg')){
 		$wpdb->delete($table_name, array( 'id' => $background_id));
 	}else{
 		die('Couldnt delete a file. Please check your file permissions and try again.');
@@ -206,28 +206,36 @@ function memeone_save_new_background($background, $name, $priority)
 	$new_picture_name = str_replace(" ", "_", (strtolower($name)));
 	$new_picture_name = preg_replace("/[^a-zA-Z0-9_-]+/", "", $new_picture_name);
 
-	// Resize image
-	$width = 600;
-	$height = 600;
-
+	// Get image dimensions
 	$width_orig = $imageproperties[0];
 	$height_orig = $imageproperties[1];
 
-	$ratio_orig = $width_orig / $height_orig;
+	// Resize image if needed
+	if ($width_orig > 600 || $height_orig > 600) {
 
-	if ($width / $height > $ratio_orig) {
-	   $width = $height * $ratio_orig;
+		$width = 600;
+		$height = 600;
+
+		$ratio_orig = $width_orig / $height_orig;
+
+		if ($width / $height > $ratio_orig) {
+		   $width = $height * $ratio_orig;
+		} else {
+		   $height = $width / $ratio_orig;
+		}
+
+		$new_background_image = imagecreatetruecolor($width, $height);
+
+		imagecopyresampled($new_background_image, $background, 0, 0, 0, 0, $width, $height, $width_orig, $height_orig);
+
+		// Write the background to disk
+		imagejpeg($new_background_image,  $destination_folder . $new_picture_name.".jpg", 100) or die ('Error writing poster to file. Please check if directory exists and its permissions.');
 	} else {
-	   $height = $width / $ratio_orig;
+
+		// If resizing is not needed, just write the background to disk
+		imagejpeg($background,  $destination_folder . $new_picture_name.".jpg", 100) or die ('Error writing poster to file. Please check if directory exists and its permissions.');
 	}
-
-	$new_background_image = imagecreatetruecolor($width, $height);
-
-	imagecopyresampled($new_background_image, $background, 0, 0, 0, 0, $width, $height, $width_orig, $height_orig);
-
-	// Write the background to disk
-	imagejpeg($new_background_image,  $destination_folder . $new_picture_name.".jpg", 100) or die ('Error writing poster to file. Please check if directory exists and its permissions.');
-
+	
 	// Add a record to database
 	global $wpdb;
 	$table_name = $wpdb->prefix . "memeone_backgrounds";

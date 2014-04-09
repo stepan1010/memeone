@@ -55,13 +55,13 @@ echo '<a href="'.$_SERVER['PHP_SELF'].'?page=memeone-memes&delete_all_memes=1"><
 			foreach ( $memes_list as $meme ) // Print info about memes
 				{					
 					$meme_info = '<tr>';
-					$meme_info .= '<td>'.$meme->id.'</td>';
-					$meme_info .= '<td>'.$meme->creation_date.'</td>';
-					$meme_info .= '<td>'.$meme->author.'</td>';
-					$meme_info .= '<td><a href="' .$meme->meme_url.$meme->meme_file_name.'.jpg' . '" target="_blank">'.$meme->meme_file_name.'</a></td>';
-					$meme_info .= '<td>'.$meme->background_name.'</td>';
-					$meme_info .= '<td>'.$meme->top_line.'</td>';
-					$meme_info .= '<td>'.$meme->bottom_line.'</td>';
+					$meme_info .= '<td>' . $meme->id . '</td>';
+					$meme_info .= '<td>' . $meme->creation_date . '</td>';
+					$meme_info .= '<td>' . $meme->author . '</td>';
+					$meme_info .= '<td><a href="' . $meme->meme_url.$meme->meme_file_name . '.jpg' . '" target="_blank">' . $meme->meme_file_name . '</a></td>';
+					$meme_info .= '<td>' . str_replace("\\", "", $meme->background_name) . '</td>';
+					$meme_info .= '<td>' . str_replace("\\", "", $meme->top_line) . '</td>';
+					$meme_info .= '<td>' . str_replace("\\", "", $meme->bottom_line) . '</td>';
 					
 					// If there is no WP post with this meme, create a button to make one
 					if ($meme->meme_wp_post_id == 0)
