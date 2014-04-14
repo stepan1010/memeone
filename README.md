@@ -7,6 +7,10 @@ MemeOne is a WordPress plugin which allows to create memes right at your webpage
 Changelog
 ====
 
+#### 2.0.1
+
+Fixed bug when plugin was not working properly with permalinks style set to "Default".
+
 #### 2.0.0
 
 This is a major update.  
@@ -15,9 +19,9 @@ Live Preview is now available.
 All image processing is now done on the client side using HTML5 and JavaScript.  
 Can now create WordPress posts with memes as content.  
 Backgrounds added. Users can now select backgrounds for their memes as well as upload their own.  
-"Thank you" page is now editable from the "Settings" page.  
+`"Thank you"` page is now editable from the `"Settings"` page.  
 List of created memes is now a separate page in the Dashboard.  
-Donate button added to the "Settings" page.  
+Donate button added to the `"Settings"` page.  
 
 #### 1.1.5
 

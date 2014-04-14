@@ -3,7 +3,7 @@
 Plugin Name: MemeOne Generator
 Plugin URI: http://stepasyuk.com/memeone/
 Description: MemeOne is a plugin for creating memes online.
-Version: 2.0.0
+Version: 2.0.1
 Author: Stepan Stepasyuk
 Author URI: http://stepasyuk.com
 License: GPLv2
@@ -269,7 +269,7 @@ function memeone_generator_selected_bg($bg_name)
 	$generator .= '<div id="memeone_error_message_area"></div>';
 
 	// Input form (for top_text and botton_text)
-	$generator .= '<form id="memeone_generator_form_displayed" name="memeone_generator_form" accept-charset="UTF-8" enctype="multipart/form-data" action='.$_SERVER['REQUEST_URI'].' method="POST">';
+	$generator .= '<form id="memeone_generator_form_displayed" name="memeone_generator_form" accept-charset="UTF-8" enctype="multipart/form-data" action=' . $_SERVER['REQUEST_URI'] . ' method="POST">';
 	$generator .= '<div id="memeone_form_wrapper"><p>Enter top text: <input type="text" id="memeone_meme_top_text" name="memeone_meme_top_text" tabindex=2 onkeyup="memeone_type_text();">';
 	$generator .= ' Font size: <input type="text" id="memeone_top_text_font_size" size=3 value="'. get_option('memeone_top_text_font_size') .'" tabindex=4 onkeyup="memeone_type_text();">&nbsp px</p>';
 	$generator .= '<p>Enter sub text: &nbsp&nbsp<input type="text" id="memeone_meme_bottom_text" name="memeone_meme_bottom_text" tabindex=3 onkeyup="memeone_type_text();">';
@@ -333,15 +333,23 @@ function memeone_load_backgrounds()
 {
 	$backgrounds = memeone_get_backgrounds();
 
+	$url = $_SERVER['REQUEST_URI'];
+	
+	if (strpos($url, '?') !== false) {
+    	$url .= '&';
+	} else {
+		$url .= '?';
+	}
+
 	$gallery = "";
 	$gallery .= '<div id="memeone_backgrounds" class="widget">';
-	$gallery .= '<p>Please, select background for your meme. You can also <a href="' . strtok($_SERVER['REQUEST_URI'], '?') . '?nobg=">upload your own</a>.</p>';
+	$gallery .= '<p>Please, select background for your meme. You can also <a href="' . $url . 'nobg=">upload your own</a>.</p>';
 	$gallery .= '<div id="memeone_backgrounds_table">';
 
 	foreach ($backgrounds as $background) {
 
 		$gallery .= '<span>';
-		$gallery .= '<a href="' . $_SERVER['REQUEST_URI'] . '?bg=' . $background->background_file_name . '">';
+		$gallery .= '<a href="' . $url . 'bg=' . $background->background_file_name . '">';
 		$gallery .= '<img class="memeone_background" src="' . $background->background_url . $background->background_file_name .'.jpg" />';
 		$gallery .= '</a></span>';
 
@@ -528,12 +536,55 @@ function memeone_turn_meme_to_wp_post($meme_id)
 // This function is a javascript workaround for Post - Redirect - Get pattern
 function memeone_redirect_to_thank_you_page($meme_id)
 {
+	$url = memeone_build_query_string($meme_id);
+
 	$string = '<script type="text/javascript">';
-	$string .= 'window.location = "' . strtok($_SERVER["REQUEST_URI"],'?') . '?thankyou=&meme=' . $meme_id . '"';
+	$string .= 'window.location = "' . $url;
 	$string .= '</script>';
 
 	echo $string;
 	exit;
+}
+
+/* This function builds the corrent query string for "Thank You" page
+* This is used to fix the issue when WordPress uses Default permalinks (?page=101)
+* and Post name permalinks (/post-name).
+*/
+function memeone_build_query_string($meme_id)
+{
+	// Take current URL
+	$url = $_SERVER['REQUEST_URI'];
+
+	// Parse it
+	$url = parse_url($url);
+
+	// Extract parameters
+	parse_str($url['query'], $params);
+
+	// Find if we have 'bg' or 'nobg' parameter
+	foreach ($params as $param=>$value) {
+		
+		// If we have any, delete them (for url to look nicer)
+		if (strpos($param, 'bg') !== false){
+			unset($params[$param]);
+			break;
+		}
+	}
+
+	// Build the query string back (with bg/nobg parameter deleted)
+	$url = http_build_query($params);
+
+	// If no parameters were left (e.g. If Post Name permalinks are used). Clear everything in current URL and add "Thank you" page parameter
+	if (strlen($url) == 0) {
+		$url = strtok($_SERVER['REQUEST_URI'], "?") . '?thankyou=&meme=' . $meme_id . '"';
+
+	// If there are some parameters left (e.g. If Default permalinks are used). Clear everything in current URL, add previos parameters (like ?page=101) and add our Thank You page parameters
+	} else {
+		$url = strtok($_SERVER['REQUEST_URI'], "?") . '?' . $url . '&thankyou=&meme=' . $meme_id . '"';
+	}
+
+	// Return brand new URL
+	return $url;
 }
 
 // Function to reset WordPress post id back to 0 (in case meme was deleted from Edit Post screen)
