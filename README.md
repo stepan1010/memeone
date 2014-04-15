@@ -6,6 +6,9 @@ MemeOne is a WordPress plugin which allows to create memes right at your webpage
 
 Changelog
 ====
+#### 2.0.3
+
+Added support for WordPress MU.
 
 #### 2.0.1
 

@@ -3,7 +3,7 @@
 Plugin Name: MemeOne Generator
 Plugin URI: http://stepasyuk.com/memeone/
 Description: MemeOne is a plugin for creating memes online.
-Version: 2.0.1
+Version: 2.0.3
 Author: Stepan Stepasyuk
 Author URI: http://stepasyuk.com
 License: GPLv2
@@ -264,7 +264,27 @@ function memeone_generator_selected_bg($bg_name)
     $generator .= '<script type="text/javascript" src="' . plugins_url( 'memeone/js/memeone-generator.min.js') . '"></script>';
 	
 	// Loading canvas, hidden div to store background (see memeone.js for more info) and error message area
-	$generator .= '<div id="memeone_meme_placeholder"><img id="memeone_background_picture" onload="memeone_preload_image_to_canvas();" src="' .$background_info->background_url . $background_info->background_file_name . '.jpg" </div>';
+
+	// When dealing with multisites, things can get tricky as the backgound may be on another domain and CORS restrictions won't let us access it. So we will use a workaround against that.
+
+	if ( !function_exists( 'is_plugin_active_for_network' ) ) {
+
+		require_once( ABSPATH . '/wp-admin/includes/plugin.php' );
+    	// Makes sure the plugin is defined before trying to use it
+ 
+		if ( is_plugin_active_for_network( 'memeone/memeone.php' ) || is_multisite()) {
+    	
+	    	$path = $background_info->path_to_background . $background_info->background_file_name . '.jpg';
+		    $type = pathinfo($path, PATHINFO_EXTENSION);
+			$data = file_get_contents($path);
+			$base64_encoded_background = 'data:image/' . $type . ';base64,' . base64_encode($data);
+
+			$generator .= '<div id="memeone_meme_placeholder"><img id="memeone_background_picture" onload="memeone_preload_image_to_canvas();" src="' . $base64_encoded_background . '" /></div>';	
+    	}
+	} else {
+    	$generator .= '<div id="memeone_meme_placeholder"><img id="memeone_background_picture" onload="memeone_preload_image_to_canvas();" src="' . $background_info->background_url . $background_info->background_file_name . '.jpg" /></div>';
+	}
+	
 	$generator .= '<div id="memeone_canvas_placeholder"><p><canvas id="memeone_canvas"></canvas></p></div>';
 	$generator .= '<div id="memeone_error_message_area"></div>';
 
