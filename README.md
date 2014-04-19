@@ -6,6 +6,10 @@ MemeOne is a WordPress plugin which allows to create memes right at your webpage
 
 Changelog
 ====
+#### 2.0.4
+
+Fixed error caused by the previous update when generator form was not loading properly.
+
 #### 2.0.3
 
 Added support for WordPress MU.
@@ -64,12 +68,15 @@ FAQ
 
 In order to use the plugin, activate it under `"Plugins"` menu and use a shortcode `[memeone_plugin]`.
 
-
 #### Does this plugin store original images people upload?
 
 No, it does not.
 
+#### The font looks weird. It is different from the font I've seen on the most memes on the Internet.
+
+The most commonly used font for memes is called Impact font. But unfortunately, I'm not allowed to redistribute it due to the licensing issues.  
+However, you can purchase it yourself and use it on your website if you want to.
 
 #### Found a bug or have a suggestion?
 
-Please email to stepan@stepasyuk.com. Your contibution is important.
+Please email to stepan.stepasyuk@gmail.com. Your contibution is important.
