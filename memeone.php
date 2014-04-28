@@ -3,7 +3,7 @@
 Plugin Name: MemeOne Generator
 Plugin URI: http://stepasyuk.com/memeone/
 Description: MemeOne is a plugin for creating memes online.
-Version: 2.0.4
+Version: 2.0.5
 Author: Stepan Stepasyuk
 Author URI: http://stepasyuk.com
 License: GPLv2
@@ -59,6 +59,13 @@ function memeone_check_version()
 		update_option('memeone_thank_you_page',"<p><h2>Thank you!</h2></p>");
 		update_option('memeone_version', 200);
 	}
+
+	if(!get_option('memeone_version') || get_option('memeone_version') < 205){
+
+		update_option('memeone_turn_memes_to_wp_posts', 1);
+		update_option('memeone_display_meme_on_thank_you_page', 1);
+		update_option('memeone_version', 205);
+	}
 }
 
 // This hook is triggered when the user deletes the plugin 
@@ -93,6 +100,7 @@ function memeone_uninstall()
 	delete_option('memeone_top_text_font_size');
 	delete_option('memeone_bottom_text_font_size');
 	delete_option('memeone_thank_you_page');
+	delete_option('memeone_display_meme_on_thank_you_page');
 }
 
 // This hook is triggered when the plugin is activated.
@@ -178,6 +186,11 @@ function memeone_activate()
 	// Default content of "Thank you" page
 	if(!get_option('memeone_thank_you_page')){
 		update_option('memeone_thank_you_page',"<p><h2>Thank you!</h2></p>");
+	}
+
+	// Whether or not to display meme on Thank You page.
+	if(!get_option('memeone_display_meme_on_thank_you_page')){
+		update_option('memeone_display_meme_on_thank_you_page',1);
 	}
 
 	// Default path to font
@@ -289,10 +302,16 @@ function memeone_generator_selected_bg($bg_name)
 
 	// Input form (for top_text and botton_text)
 	$generator .= '<form id="memeone_generator_form_displayed" name="memeone_generator_form" accept-charset="UTF-8" enctype="multipart/form-data" action=' . $_SERVER['REQUEST_URI'] . ' method="POST">';
-	$generator .= '<div id="memeone_form_wrapper"><p>Enter top text: <input type="text" id="memeone_meme_top_text" name="memeone_meme_top_text" tabindex=2 onkeyup="memeone_type_text();">';
-	$generator .= ' Font size: <input type="text" id="memeone_top_text_font_size" size=3 value="'. get_option('memeone_top_text_font_size') .'" tabindex=4 onkeyup="memeone_type_text();">&nbsp px</p>';
-	$generator .= '<p>Enter sub text: &nbsp&nbsp<input type="text" id="memeone_meme_bottom_text" name="memeone_meme_bottom_text" tabindex=3 onkeyup="memeone_type_text();">';
-	$generator .= ' Font size: <input type="text" id="memeone_bottom_text_font_size" size=3 value="'. get_option('memeone_bottom_text_font_size') .'" tabindex=5 onkeyup="memeone_type_text();">&nbsp px</p></div>';
+	
+	$generator .= '<div id="memeone_form_wrapper"><div class="memeone_input_wrapper">';
+	$generator .= '<span class="memeone_top_input_label">Enter top text: </span>';
+	$generator .= '<input type="text" id="memeone_meme_top_text" name="memeone_meme_top_text" tabindex=2 onkeyup="memeone_type_text();">';
+	$generator .= '&nbsp Font size: <input type="text" id="memeone_top_text_font_size" size=3 value="'. get_option('memeone_top_text_font_size') .'" tabindex=4 onkeyup="memeone_type_text();">&nbsp px</div>';
+	
+	$generator .= '<div class="memeone_input_wrapper">';
+	$generator .= '<span class="memeone_bottom_input_label">Enter bottom text: </span>';
+	$generator .= '<input type="text" id="memeone_meme_bottom_text" name="memeone_meme_bottom_text" tabindex=3 onkeyup="memeone_type_text();">';
+	$generator .= '&nbsp Font size: <input type="text" id="memeone_bottom_text_font_size" size=3 value="'. get_option('memeone_bottom_text_font_size') .'" tabindex=5 onkeyup="memeone_type_text();">&nbsp px</div></div>';
     
     // Hidden input for created meme (For more info see memeone.js) 
     $generator .= '<input type="hidden" id="memeone_created_meme" name="memeone_created_meme" value="">';
@@ -330,10 +349,16 @@ function memeone_generator_custom_bg()
 
 	// Input form (for top_text and botton_text)
 	$generator .= '<form id="memeone_generator_form" name="memeone_generator_form" accept-charset="UTF-8" enctype="multipart/form-data" action='.$_SERVER['REQUEST_URI'].' method="POST">';
-	$generator .= '<div id="memeone_form_wrapper"><p>Enter top text: <input type="text" id="memeone_meme_top_text" name="memeone_meme_top_text" tabindex=2 onkeyup="memeone_type_text();">';
-	$generator .= ' Font size: <input type="text" id="memeone_top_text_font_size" size=3 value="'. get_option('memeone_top_text_font_size') .'" tabindex=4 onkeyup="memeone_type_text();">&nbsp px</p>';
-	$generator .= '<p>Enter sub text: &nbsp&nbsp<input type="text" id="memeone_meme_bottom_text" name="memeone_meme_bottom_text" tabindex=3 onkeyup="memeone_type_text();">';
-	$generator .= ' Font size: <input type="text" id="memeone_bottom_text_font_size" size=3 value="'. get_option('memeone_bottom_text_font_size') .'" tabindex=5 onkeyup="memeone_type_text();">&nbsp px</p></div>';
+	
+	$generator .= '<div id="memeone_form_wrapper"><div class="memeone_input_wrapper">';
+	$generator .= '<span class="memeone_top_input_label">Enter top text: </span>';
+	$generator .= '<input type="text" id="memeone_meme_top_text" name="memeone_meme_top_text" tabindex=2 onkeyup="memeone_type_text();">';
+	$generator .= '&nbsp Font size: <input type="text" id="memeone_top_text_font_size" size=3 value="'. get_option('memeone_top_text_font_size') .'" tabindex=4 onkeyup="memeone_type_text();">&nbsp px</div>';
+	
+	$generator .= '<div class="memeone_input_wrapper">';
+	$generator .= '<span class="memeone_bottom_input_label">Enter bottom text: </span>';
+	$generator .= '<input type="text" id="memeone_meme_bottom_text" name="memeone_meme_bottom_text" tabindex=3 onkeyup="memeone_type_text();">';
+	$generator .= '&nbsp Font size: <input type="text" id="memeone_bottom_text_font_size" size=3 value="'. get_option('memeone_bottom_text_font_size') .'" tabindex=5 onkeyup="memeone_type_text();">&nbsp px</div></div>';
     
     // Hidden input for created meme (For more info see memeone.js) 
     $generator .= '<input type="hidden" id="memeone_created_meme" name="memeone_created_meme" value="">';
@@ -369,7 +394,7 @@ function memeone_load_backgrounds()
 
 		$gallery .= '<span>';
 		$gallery .= '<a href="' . $url . 'bg=' . $background->background_file_name . '">';
-		$gallery .= '<img class="memeone_background" src="' . $background->background_url . $background->background_file_name .'.jpg" />';
+		$gallery .= '<img class="memeone_background" alt="' . $background->name . '" title="' . $background->name . '" src="' . $background->background_url . $background->background_file_name .'.jpg" />';
 		$gallery .= '</a></span>';
 
 	}
@@ -404,7 +429,7 @@ function memeone_thank_you_page($meme_id)
 	$page_content = str_replace("\\", "", get_option('memeone_thank_you_page'));
 
 	// Display meme if it's needed.
-	if (get_option('memeone_turn_memes_to_wp_posts') == 2){
+	if (get_option('memeone_display_meme_on_thank_you_page') == 1){
 
 		$page_content .= memeone_display_meme($meme_id);
 	}
@@ -465,7 +490,7 @@ function memeone_save_new_meme($meme)
 	$meme_id = memeone_write_meme_to_db($meme, $meme_filename);
 
 	// Create a WordPress post if needed
-	if (get_option('memeone_turn_memes_to_wp_posts') == 1){
+	if (get_option('memeone_turn_memes_to_wp_posts') > 0){
 		
 		memeone_turn_meme_to_wp_post($meme_id);
 	}
@@ -537,11 +562,20 @@ function memeone_turn_meme_to_wp_post($meme_id)
 
 	$post_title = trim($meme->top_line) == '' ? str_replace("\\", "", $meme->bottom_line) : str_replace("\\", "", $meme->top_line);
 
+	$author = get_user_by('login', $meme->author);
+	if (!$author) { 
+		$author = 0;
+	} else {
+		$author = $author->ID;
+	}
+
+	$post_status = get_option('memeone_turn_memes_to_wp_posts') == 2 ? 'publish' : 'pending' ;
+		
 	$new_wp_post= array(
 	  'post_title'     => $post_title,
 	  'post_content'   => '<img src="'. $meme->meme_url . $meme->meme_file_name.'.jpg' . '" />',
-	  'post_status'    => 'pending',
-	  'post_author'    => 1
+	  'post_status'    => $post_status,
+	  'post_author'    => $author
 	);
 
 	$wp_post_id = wp_insert_post($new_wp_post);

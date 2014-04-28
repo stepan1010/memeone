@@ -25,6 +25,7 @@
 		}
 
 		update_option('memeone_turn_memes_to_wp_posts', $_POST['memeone_turn_memes_to_wp_posts']);
+		update_option('memeone_display_meme_on_thank_you_page', $_POST['memeone_display_meme_on_thank_you_page']);
 		
 
 		if(isset($_POST['memeone_destination_folder'])) {
@@ -66,15 +67,21 @@
 	$settings_form .= '<p>"Thank you" page:</p> <textarea cols="70" rows="5" name="memeone_thank_you_page" id="memeone_thank_you_page" >' . str_replace("\\", "", get_option('memeone_thank_you_page')) . '</textarea>';
 
 	// Assigning "selected" value to appropriate option in select input below
-	$display_meme_on_thank_you_screen = get_option('memeone_turn_memes_to_wp_posts') == "2" ? 'selected' : '' ;
-	$do_turn_to_wp_post = get_option('memeone_turn_memes_to_wp_posts') == "1" ? 'selected' : '' ;
-	$dont_turn_to_wp_post = get_option('memeone_turn_memes_to_wp_posts') == "0" ? 'selected' : '' ;
+	$do_turn_to_wp_post_and_publish = get_option('memeone_turn_memes_to_wp_posts') == 2 ? 'selected' : '' ;
+	$do_turn_to_wp_post = get_option('memeone_turn_memes_to_wp_posts') == 1 ? 'selected' : '' ;
+	$dont_turn_to_wp_post = get_option('memeone_turn_memes_to_wp_posts') == 0 ? 'selected' : '' ;
 
 	// Select input
-	$settings_form .= '<p>What to do after meme has been created:</p><p><select name="memeone_turn_memes_to_wp_posts" id="memeone_turn_memes_to_wp_posts">';
+	$settings_form .= '<p>What to do after meme has been created:</p><p><select name="memeone_turn_memes_to_wp_posts" id="memeone_turn_memes_to_wp_posts">';	
+	$settings_form .= '<option value=2 ' . $do_turn_to_wp_post_and_publish . '>Create a WordPress post with meme as content. Post will be marked as "published".</option>';
 	$settings_form .= '<option value=1 ' . $do_turn_to_wp_post . '>Create a WordPress post with meme as content. Post will be marked as "pending".</option>';
-	$settings_form .= '<option value=2 ' . $display_meme_on_thank_you_screen . '>Display meme to the user on "Thank you" screen and save the meme to disk.</option>';
 	$settings_form .= '<option value=0 ' . $dont_turn_to_wp_post . '>Nothing. Just save meme to disk.</option></select></p>';
+
+	// Checkbox for whether or not to display memes on "Thank you" screen
+	$display_memes_on_thank_you_page = get_option('memeone_display_meme_on_thank_you_page') == 1 ? 'checked' : '' ;
+
+	$settings_form .= '<p>Display memes on "Thank you" page ';
+	$settings_form .= '<input type="checkbox" name="memeone_display_meme_on_thank_you_page" value=1 ' . $display_memes_on_thank_you_page . ' /></p>';
 
 	// "Save changes button"
 	$settings_form .= '<input type="hidden" name="memeone_save_changes" value="Y" />';

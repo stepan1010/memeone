@@ -136,7 +136,7 @@ function memeone_load_image() {
 
         callback();
     }
-    }
+}
 
     // This function is called everytime our application would like to print an error message. 
     function memeone_print(msg) {
@@ -231,6 +231,7 @@ function memeone_type_top_text(canvas, context, background, fontsize, cb) {
 
     // Now we have some calculations to do
 	background = background.width;
+    console.log(fontsize);
 	var spaceBetweenLines = fontsize + (fontsize / 10);
 	var maxWidth = background - Math.round(background / 8);
 	var strokeWidth = fontsize / 15;

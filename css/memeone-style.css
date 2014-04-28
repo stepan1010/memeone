@@ -51,3 +51,19 @@
 	border-style: none;
 	width: inherit !important;
 }
+
+.memeone_input_wrapper {
+	margin-bottom: 1em;
+}
+
+.memeone_top_input_label {
+	width: 20% !important;
+	display: inline-block !important;
+	vertical-align: middle !important;
+}
+
+.memeone_bottom_input_label {
+	width: 20% !important;
+	display: inline-block !important;
+	vertical-align: middle !important;
+}
